@@ -271,7 +271,7 @@ int weeks(char month[20], char mondays[5][3])
     }
 }
 
-bool date_avaliable(int start, int end, int from[30], int to[30], int number_of_reservations)
+bool date_avaliable(double start, double end, double from[30], double to[30], int number_of_reservations)
 {
 
     bool possible = true;
@@ -314,5 +314,20 @@ void date_next_week(char month[20], char day[2])
         }
     }
     
+
+}
+
+int date_number_of_hour(char hour[5])
+{
+    char temp[2];
+    if(hour[0]=='0')
+        return (int)hour[1]-'0';
+
+    else
+    {
+        temp[0] = hour[0];
+        temp[1] = hour[1];
+        return atoi(temp);
+    }
 
 }

@@ -150,17 +150,15 @@ static void on_changed_day_to(GtkWidget *widget, Time *date)        // Podstawie
 static void on_changed_hour_from(GtkWidget *widget, Time *date)
 {
      strcpy(date->From_hour, gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget)));
-     g_print("%s", date->From_hour);
+     g_print("%d", date_number_of_hour(date->From_hour));
      gtk_combo_box_set_active(GTK_COMBO_BOX(date->combo_box_feature), 0);
 }
 
 static void on_changed_hour_to(GtkWidget *widget, Time *date)
 {
     strcpy(date->To_hour, gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget)));
-    g_print("%s", date->To_hour);
+    g_print("%d", date_number_of_hour(date->To_hour));
     gtk_combo_box_set_active(GTK_COMBO_BOX(date->combo_box_feature), 0);
-
-
     
 }
 
@@ -204,8 +202,8 @@ static void on_changed_feature(GtkWidget *widget, Time *date)
     int number_of_day_from = atoi(date->From_day);
     int number_of_day_to = atoi(date->To_day);
 
-    int start_reservation = 31*number_From_month +  number_of_day_from;
-    int end_reservation = 31*number_To_month +  number_of_day_to;
+    double start_reservation = 31*number_From_month +  number_of_day_from + date_number_of_hour(date->From_hour)/24.0 ;
+    double end_reservation = 31*number_To_month +  number_of_day_to + date_number_of_hour(date->To_hour)/24.0;
     date->start_reservation = start_reservation;
     date->end_reservation = end_reservation;
     char models[30][30];
@@ -215,12 +213,12 @@ static void on_changed_feature(GtkWidget *widget, Time *date)
 
     if(date->cyclic)    // W przypadku rezerwacji cyklicznej konflikt dat dziala inaczej dni pomiedzy moga być, więc na końcu jest sprawdzana poprawność
     {
-        row_of_avaliable = read_objects_with_type(name_of_file, avaliable, start_reservation, end_reservation,true,models);
+        row_of_avaliable = read_objects_with_type(name_of_file, avaliable, start_reservation, end_reservation,true,models,false);
     }
 
     else    //wyswietlane sa tylko mozliwe do zarezerwowania w danym terminie obiekty w rezerwacji standardowej
     {
-        row_of_avaliable = read_objects_with_type(name_of_file, avaliable, start_reservation, end_reservation, false, models);
+        row_of_avaliable = read_objects_with_type(name_of_file, avaliable, start_reservation, end_reservation, false, models,false);
     }
     g_print("\n Ilosc wierszy: %d\n", row_of_avaliable);
    // g_print("nJuz mam wiersze\n");
@@ -329,62 +327,68 @@ static void button_save_clicked(GtkWidget *widget, Time *date)
     //  g_print("%s",name_of_file);
         if (!date->cyclic)
         {
-            temp = save_reservation(date->From_month, date->From_day, date->To_month, date->To_day, date->type, name_of_file, date->model, date->start_reservation, date->end_reservation, date->comment, date->name, date->last_name, date->email, false);    
+            temp = save_reservation(date->From_month, date->From_day, date->From_hour, date->To_month, date->To_day, date->To_hour ,date->type, name_of_file, date->model, date->start_reservation, date->end_reservation, date->comment, date->name, date->last_name, date->email, false);    
         }
 
         else
             {
                 bool possible = true;
                 int number_of_reservations = 0;
-                int from[30];
-                int to[30];
+                double from[30];
+                double to[30];
 
                 number_of_reservations = file_get_dates_of_model(date->type, date->model, date->feature, from, to);
                 g_print("Liczba rezerwacji jakie ma: %d\n", number_of_reservations);
 
                 char check_month[30];
                 char check_day[30];
-                int check_start;
+                double check_start;
+                double check_end;
                 strcpy(check_month, date->From_month);
                 strcpy(check_day, date->To_day);
 
                 char temp_month[30];
                 char temp_day[30];
-                int temp_start;
+                double temp_start;
+                double temp_end;
                 int number_of_day;
 
                 strcpy(temp_month, date->From_month);
                 strcpy(temp_day, date->To_day);
 
 
-                int start, end;
-                int distance = 0;
-                end = (month_number(date->To_month) * 31 + atoi(date->To_day));
-                start = (month_number(date->From_month) * 31 + atoi(date->From_day));
+                double start, end;
+                double distance = 0;
+                end = (month_number(date->To_month) * 31 + atoi(date->To_day) + (date_number_of_hour(date->To_hour) / 24.0));
+                start = (month_number(date->From_month) * 31 + atoi(date->From_day) + (date_number_of_hour(date->From_hour) / 24.0));
                 temp_start = start;
+                temp_end = (month_number(date->From_month) * 31 + atoi(date->From_day) + (date_number_of_hour(date->To_hour) / 24.0));
                 check_start = start;
+                check_end = temp_end;
 
                 if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(date->check_button_monthly))) // raz na miesiac
                 {
 
-                    while (check_start <= end)
+                    while (check_end <= end)
                     {
-                        possible = date_avaliable(check_start, check_start, from, to, number_of_reservations);
+                        possible = date_avaliable(check_start, check_end, from, to, number_of_reservations);
                         if(!possible)
                         {
                             break;
                         }
                         date_name_of_month_from_number(month_number(check_month) + 1, check_month);
-                        check_start = month_number(check_month) * 31 + atoi(check_day);
+                        check_start = month_number(check_month) * 31 + atoi(check_day) + (date_number_of_hour(date->From_hour) / 24.0);
+                        check_end = month_number(check_month) * 31 + atoi(check_day) + (date_number_of_hour(date->To_hour) / 24.0);
                     }
 
                     if(possible)
                     {
-                        while(temp_start<=end)
+                        while(temp_end<=end)
                         {
-                            temp = save_reservation(temp_month, temp_day, temp_month, temp_day, date->type, name_of_file, date->model, temp_start, temp_start, date->comment, date->name, date->last_name, date->email, false);
+                            temp = save_reservation(temp_month, temp_day, date->From_hour, temp_month, temp_day, date->To_hour ,date->type, name_of_file, date->model, temp_start, temp_end, date->comment, date->name, date->last_name, date->email, false);
                             date_name_of_month_from_number(month_number(temp_month) + 1, temp_month);
-                            temp_start = month_number(temp_month) * 31 + atoi(temp_day);
+                            temp_start = month_number(temp_month) * 31 + atoi(temp_day) + (date_number_of_hour(date->From_hour)/24.0);
+                            temp_end = month_number(temp_month) * 31 + atoi(temp_day) + (date_number_of_hour(date->To_hour)/24.0);
                         }
 
                         popup = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "Przedmiot zostal zarezerwowany");
@@ -396,10 +400,10 @@ static void button_save_clicked(GtkWidget *widget, Time *date)
                 else //(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(date->check_button_weekly))) // raz na tydzien
                 {
 
-                    while(check_start<=end)
+                    while(check_end<=end)
                         {
                             number_of_day = atoi(check_day);
-                            possible = date_avaliable(check_start, check_start, from, to, number_of_reservations);
+                            possible = date_avaliable(check_start, check_end, from, to, number_of_reservations);
                             if (!possible)
                             {
                                 break;
@@ -421,14 +425,15 @@ static void button_save_clicked(GtkWidget *widget, Time *date)
                             g_print("Jestem sprawdzanie\n");
                             //date_next_week(check_month, check_day);      // aktualizacja miesiaca i dnia w przesunieciu o tydzien
                             sprintf(check_day, "%d", number_of_day);
-                            check_start = month_number(check_month) * 31 + atoi(check_day);
+                            check_start = month_number(check_month) * 31 + atoi(check_day) + date_number_of_hour(date->From_hour) / 24.0;
+                            check_end = month_number(check_month) * 31 + atoi(check_day) + date_number_of_hour(date->To_hour) / 24.0;
                         }
 
                         if(possible)
                         {
-                            while(temp_start<=end)
+                            while(temp_end<=end)
                             {   number_of_day = atoi(temp_day);
-                                  temp = save_reservation(temp_month, temp_day, temp_month, temp_day, date->type, name_of_file, date->model, temp_start, temp_start, date->comment, date->name, date->last_name, date->email, false);
+                                  temp = save_reservation(temp_month, temp_day, date->From_hour, temp_month, temp_day, date->To_hour, date->type, name_of_file, date->model, temp_start, temp_end, date->comment, date->name, date->last_name, date->email, false);
                                   
                                   //date_next_week(temp_month, temp_day); // aktualizacja miesiaca i dnia w przesunieciu o tydzien
     
@@ -446,7 +451,8 @@ static void button_save_clicked(GtkWidget *widget, Time *date)
                               }
                               //  g_print("Jestem zapisywanie\n");
                               sprintf(temp_day, "%d", number_of_day);
-                              temp_start = month_number(temp_month) * 31 + atoi(temp_day);
+                              temp_start = month_number(temp_month) * 31 + atoi(temp_day) + date_number_of_hour(date->From_hour)/24.0;
+                              temp_end = month_number(temp_month) * 31 + atoi(temp_day) + date_number_of_hour(date->To_hour)/24.0;
                             }
 
                             popup = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "Przedmiot zostal zarezerwowany");
@@ -468,8 +474,8 @@ static void button_save_clicked(GtkWidget *widget, Time *date)
     }
 }
 
-    static void check_button_type_toggled(GtkWidget *widget, Add *date)
-    {
+static void check_button_type_toggled(GtkWidget *widget, Add *date)
+{
 
         if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
         {
@@ -747,7 +753,7 @@ static void history_on_changed_feature(GtkWidget *widget, Time *date)
 
     sprintf(name_of_file, "%s-%s.txt", date->type, date->feature);
 
-    number_of_models = read_objects_with_type(name_of_file, avaliable, start_reservation, end_reservation,TRUE,models);
+    number_of_models = read_objects_with_type(name_of_file, avaliable, start_reservation, end_reservation,TRUE,models,false);
 
     gtk_combo_box_text_remove_all(GTK_COMBO_BOX_TEXT(date->combo_box_model));
     g_print("\n Ilosc: %d\n", number_of_models);
@@ -871,7 +877,7 @@ static void week_button_show_clicked(GtkWidget *widget, Time *date)
     int number_of_day_from = atoi(date->From_day);
     int number_of_day;
     int number_of_month;
-    int start = (month_number(date->From_month) * 31 + number_of_day_from);
+    double start = (month_number(date->From_month) * 31 + number_of_day_from);
     int jump = 1;
     char prem_month[30];
     strcpy(prem_month, date->From_month);
@@ -1064,5 +1070,240 @@ static void check_button_cyclic_toggled(GtkWidget *widget, Time *date)
         g_print("Nie jest cykliczna\n");
     }
         
+}
+
+static void week_booked_button_show_clicked(GtkWidget *widget, Time *date)
+{
+    GtkTextIter iter[7][7];
+    GtkTextMark *cursor;
+
+    char avaliable_monday[7][70][60];
+    char avaliable_thuesday[7][70][60];
+    char avaliable_wednesday[7][70][60];
+    char avaliable_thursday[7][70][60];    
+    char avaliable_friday[7][70][60];
+    char avaliable_sathurday[7][70][60];
+    char avaliable_sunday[7][70][60];
+    int number_of_day_from = atoi(date->From_day);
+    int number_of_day;
+    int number_of_month;
+    double start = (double)((month_number(date->From_month) * 31 + number_of_day_from) + 7 / 24.0);
+    double end = (double)((month_number(date->From_month) * 31 + number_of_day_from) + 9 / 24.0);
+    int jump = 1;
+    char prem_month[30];
+    strcpy(prem_month, date->From_month);
+    int lines = 0;
+
     
+    for (int i = 0; i < 7; i++)
+    {
+        for (int j = 0; j < 7; j++)
+            gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[i][j]), "", -1); // Czyszczenie pola dla kazdego dnia tygodnia
+    }
+    number_of_day = atoi(date->From_day);
+
+    if (number_of_day > date_days_in_month(prem_month))
+    {
+        number_of_day = 1;
+        date_name_of_month_from_number(month_number(prem_month) + 1, prem_month);
+    }
+
+    for (int i = 0; i < 7; i++)
+    {
+
+        start = (month_number(prem_month) * 31 + number_of_day) + (7 + i * 2) / 24.0;
+        end = (month_number(prem_month) * 31 + number_of_day) + (9 + i * 2) / 24.0;
+
+        gtk_text_buffer_get_iter_at_offset(date->text_buffer_day_booked[0][i], &iter[0][i], 0);
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[0][i]), "", -1);
+        lines = file_week_hour_booked(date->From_month, date->From_day, avaliable_monday[i], start, end);
+
+        for (int p = 0; p < lines; p++)
+        {
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[0][i]), &iter[0][i], avaliable_monday[i][p], -1);
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[0][i]), &iter[0][i], "\n\n", -1);
+
+            g_print("%s\n", avaliable_monday[i][p]);
+        }
+
+        
+
+     }
+        
+        number_of_day++;
+
+
+    if (number_of_day > date_days_in_month(prem_month))
+    {
+        number_of_day = 1;
+        date_name_of_month_from_number(month_number(prem_month) + 1, prem_month);
+    }
+
+
+    for (int i = 0; i < 7; i++)
+    {
+
+        start = (month_number(prem_month) * 31 + number_of_day) + (7 + i * 2) / 24.0;
+        end = (month_number(prem_month) * 31 + number_of_day) + (9 + i * 2) / 24.0;
+
+        gtk_text_buffer_get_iter_at_offset(date->text_buffer_day_booked[1][i], &iter[1][i], 0);
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[1][i]), "", -1);
+        lines = file_week_hour_booked(date->From_month, date->From_day, avaliable_thuesday[i], start, end);
+
+        for (int p = 0; p < lines; p++)
+        {
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[1][i]), &iter[1][i], avaliable_thuesday[i][p], -1);
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[1][i]), &iter[1][i], "\n\n", -1);
+        }
+
+     }
+        
+        number_of_day++;
+
+
+    if (number_of_day > date_days_in_month(prem_month))
+    {
+        number_of_day = 1;
+        date_name_of_month_from_number(month_number(prem_month) + 1, prem_month);
+    }
+
+
+    for (int i = 0; i < 7; i++)
+    {
+
+        start = (month_number(prem_month) * 31 + number_of_day) + (7 + i * 2) / 24.0;
+        end = (month_number(prem_month) * 31 + number_of_day) + (9 + i * 2) / 24.0;
+
+        gtk_text_buffer_get_iter_at_offset(date->text_buffer_day_booked[2][i], &iter[2][i], 0);
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[2][i]), "", -1);
+        lines = file_week_hour_booked(date->From_month, date->From_day, avaliable_wednesday[i], start, end);
+
+        for (int p = 0; p < lines; p++)
+        {
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[2][i]), &iter[2][i], avaliable_wednesday[i][p], -1);
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[2][i]), &iter[2][i], "\n\n", -1);
+        }
+
+     }
+        
+        number_of_day++;
+
+
+
+     if (number_of_day > date_days_in_month(prem_month))
+    {
+        number_of_day = 1;
+        date_name_of_month_from_number(month_number(prem_month) + 1, prem_month);
+        
+    }
+
+
+    for (int i = 0; i < 7; i++)
+    {
+
+        start = (month_number(prem_month) * 31 + number_of_day) + (7 + i * 2) / 24.0;
+        end = (month_number(prem_month) * 31 + number_of_day) + (9 + i * 2) / 24.0;
+
+        gtk_text_buffer_get_iter_at_offset(date->text_buffer_day_booked[3][i], &iter[3][i], 0);
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[3][i]), "", -1);
+        lines = file_week_hour_booked(date->From_month, date->From_day, avaliable_thursday[i], start, end);
+
+        for (int p = 0; p < lines; p++)
+        {
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[3][i]), &iter[3][i], avaliable_thursday[i][p], -1);
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[3][i]), &iter[3][i], "\n\n", -1);
+        }
+
+     }
+        
+        number_of_day++;
+
+    
+
+     if (number_of_day > date_days_in_month(prem_month))
+    {
+        number_of_day = 1;
+        date_name_of_month_from_number(month_number(prem_month) + 1, prem_month);
+    }
+
+
+    for (int i = 0; i < 7; i++)
+    {
+
+        start = (month_number(prem_month) * 31 + number_of_day) + (7 + i * 2) / 24.0;
+        end = (month_number(prem_month) * 31 + number_of_day) + (9 + i * 2) / 24.0;
+
+        gtk_text_buffer_get_iter_at_offset(date->text_buffer_day_booked[4][i], &iter[4][i], 0);
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[4][i]), "", -1);
+        lines = file_week_hour_booked(date->From_month, date->From_day, avaliable_friday[i], start, end);
+
+        for (int p = 0; p < lines; p++)
+        {
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[4][i]), &iter[4][i], avaliable_friday[i][p], -1);
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[4][i]), &iter[4][i], "\n\n", -1);
+        }
+
+     }
+        
+        number_of_day++;
+
+
+
+    if (number_of_day > date_days_in_month(prem_month))
+    {
+        number_of_day = 1;
+        date_name_of_month_from_number(month_number(prem_month) + 1, prem_month); 
+    }
+
+
+    for (int i = 0; i < 7; i++)
+    {
+
+        start = (month_number(prem_month) * 31 + number_of_day) + (7 + i * 2) / 24.0;
+        end = (month_number(prem_month) * 31 + number_of_day) + (9 + i * 2) / 24.0;
+
+        gtk_text_buffer_get_iter_at_offset(date->text_buffer_day_booked[5][i], &iter[5][i], 0);
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[5][i]), "", -1);
+        lines = file_week_hour_booked(date->From_month, date->From_day, avaliable_sathurday[i], start, end);
+
+        for (int p = 0; p < lines; p++)
+        {
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[5][i]), &iter[5][i], avaliable_sathurday[i][p], -1);
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[5][i]), &iter[5][i], "\n\n", -1);
+        }
+
+     }
+        
+        number_of_day++;
+
+
+
+    if (number_of_day > date_days_in_month(prem_month))
+    {
+        number_of_day = 1;
+        date_name_of_month_from_number(month_number(prem_month) + 1, prem_month);
+        
+    }
+
+
+    for (int i = 0; i < 7; i++)
+    {
+
+        start = (month_number(prem_month) * 31 + number_of_day) + (7 + i * 2) / 24.0;
+        end = (month_number(prem_month) * 31 + number_of_day) + (9 + i * 2) / 24.0;
+
+        gtk_text_buffer_get_iter_at_offset(date->text_buffer_day_booked[6][i], &iter[6][i], 0);
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(date->text_buffer_day_booked[6][i]), "", -1);
+        lines = file_week_hour_booked(date->From_month, date->From_day, avaliable_sunday[i], start, end);
+
+        for (int p = 0; p < lines; p++)
+        {
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[6][i]), &iter[6][i], avaliable_sunday[i][p], -1);
+            gtk_text_buffer_insert(GTK_TEXT_BUFFER(date->text_buffer_day_booked[6][i]), &iter[6][i], "\n\n", -1);
+        }
+
+     }
+        
+        number_of_day++;
+
 }

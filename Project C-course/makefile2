@@ -1,0 +1,17 @@
+CC=gcc
+CFLAGS=-std=c11 -Wno-unused-result -Wno-unused-variable -Wextra  -O2 $(shell pkg-config gtk+-3.0 --cflags)
+
+LDFLAGS= $(shell pkg-config gtk+-3.0 --libs)
+
+NAME=main
+
+SRC=main.c menu.c menu.h  menu_functions.h structures.h menu_functions.c menu_functions_actions.h  date_functions.h date_functions.c file_functions.h file_functions.c
+
+OBJS=$($SRC.c=.o)
+
+$(NAME):$(OBJS)
+	$(CC) $(CFLAGS) $(SRC) -o $(NAME) $(LDFLAGS)
+
+
+
+

@@ -101,10 +101,11 @@ int read_object(char type[30], char features[][30])
 }
 
 
-int read_objects_with_type(char name_of_file[30], char avaliable[][30], int start_of_reservation, int end_of_reservation, bool history, char models[30][30])
+int read_objects_with_type(char name_of_file[30], char avaliable[][30], double start_of_reservation, double end_of_reservation, bool history, char models[30][30], bool booked)
 {
     int row_of_avaliable = 0;
     int number_of_models = 0;
+    int number_of_booked = 0;
     FILE *file_pointer;
     file_pointer = fopen(name_of_file, "r");
 
@@ -121,8 +122,8 @@ int read_objects_with_type(char name_of_file[30], char avaliable[][30], int star
         int line = 1;
         
         int number_of_reservations = 0;
-        int temp_start = 0;
-        int temp_end = 0;
+        double temp_start = 0;
+        double temp_end = 0;
         bool possible = 1;
         char temp = 'a';
         char temp2;
@@ -190,11 +191,11 @@ int read_objects_with_type(char name_of_file[30], char avaliable[][30], int star
                     {
                         for (int p = 0; p < number_of_reservations; p ++)
                         {
-                            fscanf(file_pointer, "%d", &temp_start);
-                            fscanf(file_pointer, "%d", &temp_end);
+                            fscanf(file_pointer, "%lf", &temp_start);
+                            fscanf(file_pointer, "%lf", &temp_end);
                             g_print("%s\n", name_of_object[i - 1]);
-                            g_print("start: %d \n", temp_start);
-                            g_print("end: %d\n", temp_end);
+                            g_print("start: %lf \n", temp_start);
+                            g_print("end: %lf\n", temp_end);
 
                             if((temp_start>=start_of_reservation && temp_start<=end_of_reservation) || (temp_end>=start_of_reservation && temp_end<=end_of_reservation) || (temp_start<=start_of_reservation && temp_end>=end_of_reservation))
                             {
@@ -234,6 +235,18 @@ int read_objects_with_type(char name_of_file[30], char avaliable[][30], int star
                                 g_print("Models: %s\n",models[number_of_models-1]);
                             }
                     }
+
+                if(!possible)
+                {
+                     if(name_of_object[i-1][0]>='A' && name_of_object[i-1][0]<='z')
+                        {
+                        sprintf(models[number_of_booked], "%s", name_of_object[i - 1]);
+                        number_of_booked++;
+                        g_print("\n\n");
+                        g_print("Niedostepny: %s\n", name_of_object[i - 1]);
+                        g_print("\n\n");
+                        }
+                }
                 
 
                 
@@ -248,7 +261,11 @@ int read_objects_with_type(char name_of_file[30], char avaliable[][30], int star
 
           //fclose(file_pointer);
           //rewind(file_pointer);
-          if (history)
+          if(booked)
+          {
+              return number_of_booked;
+          }
+          else if (history)             //!!!!!
               return number_of_models;
 
           else
@@ -259,7 +276,7 @@ int read_objects_with_type(char name_of_file[30], char avaliable[][30], int star
         
 }
 
-int save_reservation(char month_from[30], char day_from[30], char month_to[30], char day_to[30], char name_of_type[30], char name_of_file[80], char name_of_reserved[30], int start_of_reservation, int end_of_reservation, char comment[100], char name[30], char lastname[30], char mail[30],bool remove)
+int save_reservation(char month_from[30], char day_from[30], char hour_from[5], char month_to[30], char day_to[30], char hour_to[5], char name_of_type[30], char name_of_file[80], char name_of_reserved[30], double start_of_reservation, double end_of_reservation, char comment[100], char name[30], char lastname[30], char mail[30],bool remove)
 {
 
     FILE *fp;
@@ -310,7 +327,7 @@ int save_reservation(char month_from[30], char day_from[30], char month_to[30], 
                             fseek(fp,-1,1);
                             fprintf(fp,"%d\n",number_of_reservations+1);
 
-                            fprintf(fp, "%d %d", start_of_reservation, end_of_reservation);
+                            fprintf(fp, "%.3lf %.3lf", start_of_reservation, end_of_reservation);
 
                             done = true;
                         }
@@ -344,8 +361,8 @@ int save_reservation(char month_from[30], char day_from[30], char month_to[30], 
                                 
                             }
                             //fseek(fp, -1, 1);
-                            fprintf(fp, " %d %d", start_of_reservation, end_of_reservation);
-                            g_print("%d %d", start_of_reservation, end_of_reservation);
+                            fprintf(fp, " %.3lf %.3lf", start_of_reservation, end_of_reservation);
+                            g_print("%lf %lf", start_of_reservation, end_of_reservation);
 
                         }
                         break;
@@ -374,7 +391,7 @@ int save_reservation(char month_from[30], char day_from[30], char month_to[30], 
             fprintf(stderr, "Nie udalo sie w odczytac pliku ");
     }
 
-    fprintf(file_info, "Od: %s, %s Do: %s,%s\n", month_from, day_from, month_to, day_to);
+    fprintf(file_info, "Od: %s, %s, %s   Do: %s,%s, %s\n", month_from, day_from, hour_from, month_to, day_to, hour_to);
     fprintf(file_info, "Imie: %s, Nazwisko: %s\n", name, lastname);
     fprintf(file_info, "Email: %s\n", mail);
     fprintf(file_info, "Komentarz: %s\n\n", comment);
@@ -833,7 +850,7 @@ int file_number_of_reservations(char name_of_type[30], char name_of_feature[30],
     return -1;
 }
 
-int file_week_avaliable(char month[20], char day[2], char avaliable_on_day[70][60], int start_of_reservation, int end_of_reservation)
+int file_week_avaliable(char month[20], char day[2], char avaliable_on_day[70][60], double start_of_reservation, double end_of_reservation)
 {
     char types[30][30];
     int number_of_types = 0;
@@ -900,7 +917,7 @@ int file_week_avaliable(char month[20], char day[2], char avaliable_on_day[70][6
                 sprintf(name_of_file_features, "%s-%s.txt", types[p], features[q]);
 
                 // Dla kazdego modelu z ta cecha dodaje jezeli jest dostepny w tym dniu
-                temp_number_of_avaliable_models = read_objects_with_type(name_of_file_features, temp_models, start_of_reservation, end_of_reservation, false, temp_models2);
+                temp_number_of_avaliable_models = read_objects_with_type(name_of_file_features, temp_models, start_of_reservation, end_of_reservation, false, temp_models2,false);
 
                                                     // Przepisanie do docolewej tablicy dostepnych sprzetu
                 for (int s = 0; s < temp_number_of_avaliable_models; s++)
@@ -918,7 +935,7 @@ int file_week_avaliable(char month[20], char day[2], char avaliable_on_day[70][6
     return number_of_avaliable;
 }
 
-int file_get_dates_of_model(char type[30], char model[30], char feature[30], int from[30], int to[30])
+int file_get_dates_of_model(char type[30], char model[30], char feature[30], double from[30], double to[30])
 {
     FILE *fp;
     char name_of_file[60];
@@ -976,7 +993,7 @@ int file_get_dates_of_model(char type[30], char model[30], char feature[30], int
 
                          for (int i = 0; i < number_of_reservations; i++)
                             {
-                                fscanf(fp, "%d %d", &from[i], &to[i]);
+                                fscanf(fp, "%lf %lf", &from[i], &to[i]);
                                 //fscanf(fp, "%d", &to[i]);
 
                                // g_print("%d %d\n", from[i], to[i]);
@@ -999,4 +1016,91 @@ int file_get_dates_of_model(char type[30], char model[30], char feature[30], int
 
     fclose(fp);
     return number_of_reservations;
+}
+
+
+int file_week_hour_booked(char month[20], char day[2], char avaliable_on_hour[70][60], double start_of_reservation, double end_of_reservation)
+{
+    char types[30][30];
+    int number_of_types = 0;
+    FILE *fp;
+    fp = fopen("types_of_objects.txt", "r");
+    int i = 0, j = 0;
+    char temp = 'a';
+    char name_of_file_features[30];
+    char name_of_file_models[30];
+    char features[30][30];
+    int number_of_features;
+    char temp_models[30][30];
+    char temp_models2[30][30];
+    int temp_number_of_booked_models = 0;
+    int number_of_avaliable = 0;
+    int number_of_booked = 0;
+
+    if(fp==NULL)
+    {
+        fprintf(stderr, "Nie udalo sie otworzyc pliku ");
+    }
+
+    else
+    {
+        //g_print("Jestem");
+        while (!feof(fp)) // czytanie rodzaji obiektow
+        {
+            
+            while(temp!='\n')
+            {
+                temp = fgetc(fp);
+
+                if(temp!='\n')
+                {
+                    if(feof(fp))
+                        break;
+
+                    types[i][j] = temp;
+                    j++;
+                }
+
+                else
+                {
+                    
+                    types[i][j] = '\0';
+                    i++;
+                    j = 0;
+                    number_of_types++;
+                    g_print("%s\n", types[i - 1]);
+                }
+                temp = 'a';
+                
+            }
+        }
+        fclose(fp);
+
+        for (int p = 0; p < number_of_types; p++)   // Dla kazdego rodzaju sprzetu
+        {
+          //  sprintf(name_of_file_features, "%s-%s.txt", types[p]);
+
+            number_of_features = read_object(types[p], features);  // Liczba cech dla tego rodzaju sprzetu
+
+            for (int q = 0; q < number_of_features; q++)    // Dla kazdej cechy
+            {
+                sprintf(name_of_file_features, "%s-%s.txt", types[p], features[q]);
+
+                // Dla kazdego modelu z ta cecha dodaje jezeli jest dostepny w tym dniu
+                temp_number_of_booked_models = read_objects_with_type(name_of_file_features, temp_models, start_of_reservation, end_of_reservation, false, temp_models2, true);
+
+                // Przepisanie do docolewej tablicy dostepnych sprzetu
+                for (int s = 0; s < temp_number_of_booked_models; s++)
+                {
+                    sprintf(avaliable_on_hour[number_of_booked], "%s:\n %s", types[p], temp_models[s]);
+                    g_print("%s\n", avaliable_on_hour[number_of_booked]);
+                    number_of_booked++;
+                }
+            }
+            
+        }
+        
+    }
+
+    return number_of_booked;
 }

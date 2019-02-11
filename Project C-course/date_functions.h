@@ -10,7 +10,7 @@ int month_number(char month[20]);
 int weeks(char month[20], char mondays[5][3]);
 
 // zwraca true jezeli dla podanego poczatku i konca z istniejacymi poczatkami i koncami nie ma konfliktu w dacie rezerwacji
-bool date_avaliable(int start, int end, int from[30], int to[30], int number_of_reservations);
+bool date_avaliable(double start, double end, double from[30], double to[30], int number_of_reservations);
 
 //daje kolejny tydzien zmienia day i month jezeli to konieczne
 void date_next_week(char month[20], char day[2]);
@@ -20,5 +20,8 @@ int date_days_in_month(char month[20]);
 
 // do month przypisuje nazwe miesiaca majac jego numer
 void date_name_of_month_from_number(int number_of_month, char month[20]);
+
+// zwraca numer godziny
+int date_number_of_hour(char hour[5]);
 
 #endif

@@ -23,8 +23,11 @@ typedef struct Time_of_reservation
     GtkTextBuffer *text_buffer;
     GtkWidget *text_view;
     GtkTextBuffer *text_buffer_day[7];
+    GtkTextBuffer *text_buffer_day_booked[7][7];
     GtkWidget *text_view_day[7];
+    GtkWidget *text_view_day_booked[7][7];
     GtkWidget *scrolled_window_day[7];
+    GtkWidget *scrolled_window_day_booked[7][7];
     GtkWidget *check_button_monthly;
     GtkWidget *check_button_weekly;
     GtkWidget *check_button_cyclic;
@@ -52,8 +55,8 @@ typedef struct Time_of_reservation
     char comment[100];
     char email[30];
 
-    int start_reservation;
-    int end_reservation;
+    double start_reservation;
+    double end_reservation;
 
     bool remove_popup_showed;
     bool cyclic; // true jesli zaznaczona jest opcja rezerwacja cykliczna wpp false

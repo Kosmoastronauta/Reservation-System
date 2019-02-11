@@ -72,7 +72,7 @@ static void button_reserv_clicked(GtkWidget *widget, gpointer data)
             
         }
     
-    for (int i = 0; i <= 23; i++)       // Wypelnienie wartosciami godziny
+    for (int i = 7; i <= 20; i++)       // Wypelnienie wartosciami godziny
      {
             if(i<10)
             {
@@ -197,6 +197,7 @@ static void button_reserv_clicked(GtkWidget *widget, gpointer data)
 
 
      gtk_container_add(GTK_CONTAINER(window), grid);
+     gtk_container_set_border_width(GTK_CONTAINER(window), 20);
 
      gtk_widget_show_all(window);
 
@@ -270,6 +271,7 @@ static void button_add_clicked(GtkWidget *widget, gpointer data)
     gtk_grid_attach(GTK_GRID(grid), date.entry_kind_of_feature, 2, 5, 1, 1);
 
     gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 20);
 
     gtk_widget_show_all(window);
 
@@ -346,6 +348,7 @@ static void button_remove_clicked(GtkWidget *widget, gpointer data)
 
 
     gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 20);
 
     gtk_widget_show_all(window);
 
@@ -436,6 +439,7 @@ static void button_history_clicked(GtkWidget *widget, gpointer data)
     gtk_grid_attach(GTK_GRID(grid), date.scrolled_window, 3, 1, 4, 4);
 
     gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 20);
 
     gtk_widget_show_all(window);
 
@@ -544,6 +548,152 @@ static void button_week_clicked(GtkWidget *widget, gpointer data)
 
 
     gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 20);
+
+    gtk_widget_show_all(window);
+
+    gtk_main();
+
+}
+
+static void button_week_booked_clicked(GtkWidget *widget, gpointer data)
+{
+     char months[13][25]={"a","Styczen","Luty","Marzec","Kwiecien","Maj","Czerwiec","Lipiec","Sierpien","Wrzesien","Pazdziernik",
+    "Listopad","Grudzien"};
+
+    char name_of_month[20];
+
+    int argc;
+    char **argv;
+    Time date;
+    GtkWidget *grid, *window, *label_month, *label_monday, *button_show, *label_day[7], *label_title, *label_hour[7], *label_sep[7];
+    grid = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 10);
+    gtk_grid_set_row_homogeneous(GTK_GRID(grid), TRUE);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 20);
+    gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
+    date.cyclic = false;
+
+    
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "Tygodniowy Plan");
+    gtk_window_set_default_size(GTK_WINDOW(window), 1400, 1000);
+    g_signal_connect(window, "delete_event", G_CALLBACK(gtk_main_quit), NULL);
+
+    date.combo_box_month_from = gtk_combo_box_text_new();
+    date.combo_box_day_from=gtk_combo_box_text_new();
+
+    for (int i = 1; i <= 12; i++)       // wypelnienie nazwami miesiecy
+        {
+            strcpy(name_of_month, months[i]);
+            gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(date.combo_box_month_from), NULL, name_of_month);
+        }
+
+
+  /*                                                                  //Okna dla dni tygodnia
+    date.scrolled_window_day[0] = gtk_scrolled_window_new(NULL, NULL);
+    date.scrolled_window_day[1] = gtk_scrolled_window_new(NULL, NULL);
+    date.scrolled_window_day[2] = gtk_scrolled_window_new(NULL, NULL);
+    date.scrolled_window_day[3] = gtk_scrolled_window_new(NULL, NULL);
+    date.scrolled_window_day[4] = gtk_scrolled_window_new(NULL, NULL);
+    date.scrolled_window_day[5] = gtk_scrolled_window_new(NULL, NULL);
+    date.scrolled_window_day[6] = gtk_scrolled_window_new(NULL, NULL);
+*/
+
+
+    for (int i = 0; i < 7; i++)
+    {
+        label_sep[i] = gtk_label_new(" ");
+        for (int j = 0; j < 7; j++)
+        {
+
+            date.scrolled_window_day_booked[i][j] = gtk_scrolled_window_new(NULL, NULL);
+
+            date.text_view_day_booked[i][j] = gtk_text_view_new();
+            date.text_buffer_day_booked[i][j] = gtk_text_view_get_buffer(GTK_TEXT_VIEW(date.text_view_day_booked[i][j]));
+            gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(date.text_view_day_booked[i][j]), GTK_WRAP_WORD);
+            date.scrolled_window_day_booked[i][j] = gtk_scrolled_window_new(NULL, NULL);
+            gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(date.scrolled_window_day_booked[i][j]), GTK_POLICY_ALWAYS, GTK_POLICY_ALWAYS);
+
+            gtk_container_add (GTK_CONTAINER (date.scrolled_window_day_booked[i][j]), date.text_view_day_booked[i][j]);
+            gtk_container_set_border_width (GTK_CONTAINER (date.scrolled_window_day_booked[i][j]),25);
+            
+        }
+    }
+
+    label_title = gtk_label_new("Zarezerwowane przedmioty");
+    label_month = gtk_label_new("Miesiac:");
+    label_monday = gtk_label_new("Poczatek tygodnia:");
+
+    label_day[0] = gtk_label_new("Pon");
+    label_day[1] = gtk_label_new("Wt");
+    label_day[2] = gtk_label_new("Sr");
+    label_day[3] = gtk_label_new("Czw");
+    label_day[4] = gtk_label_new("Pt");
+    label_day[5] = gtk_label_new("Sob");
+    label_day[6] = gtk_label_new("Nie");
+    label_hour[0] = gtk_label_new("7:00 - 9:00");
+    label_hour[1] = gtk_label_new("9:00 - 11:00");
+    label_hour[2] = gtk_label_new("11:00 - 13:00");
+    label_hour[3] = gtk_label_new("13:00 - 15:00");
+    label_hour[4] = gtk_label_new("15:00 - 17:00");
+    label_hour[5] = gtk_label_new("17:00 - 19:00");
+    label_hour[6] = gtk_label_new("19:00 - 21:00");
+    button_show = gtk_button_new_with_label("Pokaz");
+
+    g_signal_connect(date.combo_box_month_from, "changed", G_CALLBACK(week_on_changed_month), (gpointer)&date);
+    g_signal_connect(date.combo_box_day_from, "changed", G_CALLBACK(week_on_changed_day), (gpointer)&date);
+    g_signal_connect(button_show, "clicked", G_CALLBACK(week_booked_button_show_clicked), (gpointer)&date);
+    
+
+    //Dolaczanie labeli z nazwami dni tygodnia tytulu i tytulow wyboru
+    gtk_grid_attach(GTK_GRID(grid), label_title, 6, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_month, 1, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_monday, 1, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_day[0], 3, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_day[1], 4, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_day[2], 5, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_day[3], 6, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_day[4], 7, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_day[5], 8, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_day[6], 9, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), button_show, 2, 3, 1, 1);
+
+   // gtk_grid_attach(GTK_GRID(grid), label_hour[0], 1, 3, 1, 1);
+
+    gtk_grid_attach(GTK_GRID(grid), date.combo_box_month_from, 2, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), date.combo_box_day_from, 2, 2, 1, 1);
+
+    // Dolaczanie pol widoku z przedmiotami dostepnymi w kazdym dniu
+    /*
+    gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day[0], 3, 3, 1, 7);
+    gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day[1], 4, 3, 1, 7);
+    gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day[2], 5, 3, 1, 7);
+    gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day[3], 6, 3, 1, 7);
+    gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day[4], 7, 3, 1, 7);
+    gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day[5], 8, 3, 1, 7);
+    gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day[6], 9, 3, 1, 7);
+    */
+  // gtk_grid_attach(GTK_GRID(grid), label_sep[0], 2, 4, 7, 5);
+    int p = 0;
+    // Dolaczanie okien 
+    for (int i = 0; i < 7; i++)
+    {
+        p = 0;
+        gtk_grid_attach(GTK_GRID(grid), label_hour[i], 2, 2*i+5, 1, 1);
+        
+        for (int j = 0; j < 7; j++)
+        {
+
+            gtk_grid_attach(GTK_GRID(grid), date.scrolled_window_day_booked[i][j], i + 3, j + 4 + p, 1, 3);
+            p++;
+        }
+
+    }
+   
+    gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 20);
 
     gtk_widget_show_all(window);
 

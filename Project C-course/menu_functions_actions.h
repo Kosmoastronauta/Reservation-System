@@ -60,4 +60,6 @@ static void check_button_weekly_toggled(GtkWidget *widget, Time *date);
 static void check_button_monthly_toggled(GtkWidget *widget, Time *date);
 
 static void check_button_cyclic_toggled(GtkWidget *widget, Time *date);
+
+static void week_booked_button_show_clicked(GtkWidget *widget, Time *date);
 #endif

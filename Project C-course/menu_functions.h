@@ -15,6 +15,7 @@ static void button_week_clicked(GtkWidget *widget, gpointer data);
     
 static void button_exit_clicked(GtkWidget *widget, gpointer data);
 
+static void button_week_booked_clicked(GtkWidget *widget, gpointer data);
 
 
 
