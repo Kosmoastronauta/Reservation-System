@@ -1,0 +1,15 @@
+Od: Styczen, 4 Do: Marzec,2
+Imie: Albert, Nazwisko: Nowak
+Email: jakis_adres_mailowy@c.com
+Komentarz: moj komentarz
+
+Od: Maj, 4 Do: Maj,4
+Imie: , Nazwisko: asd
+Email: (
+Komentarz: ú¥’ß
+
+Od: Maj, 4 Do: Maj,4
+Imie: , Nazwisko: asd
+Email: (
+Komentarz: ú¥’ß
+

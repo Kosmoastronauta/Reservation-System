@@ -1,0 +1,15 @@
+Od: Maj, 4 Do: Marzec,8
+Imie: Mateusz, Nazwisko: Alfred
+Email: losowyadres@domena.pl
+Komentarz: Chce ten sprzet i tyle
+
+Od: Maj, 5 Do: Wrzesien,5
+Imie: Mateusz, Nazwisko: Nowak
+Email: adres
+Komentarz: Ale fajnie
+
+Od: Pazdziernik, 5 Do: Listopad,8
+Imie: Mateusz, Nazwisko: Nowak
+Email: adres
+Komentarz: Ale fajnie
+
